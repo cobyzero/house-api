@@ -7,17 +7,23 @@ export class CommandService {
         this.train();
     }
     classifier = new BayesClassifier();
-    port = new SerialPort({ path: "COM5", baudRate: 9600 });
-    convertToCommand(text: string): string {
-        if (typeof text !== 'string') {
-            throw new Error('Invalid input: expected a string field "text" in the request body.');
-        }
-        const normalized = text.trim();
-        console.log(normalized);
-        const cmd = this.classifier.classify(normalized);
 
-        this.port.write(cmd + "\n");
-        return cmd;
+    convertToCommand(text: string): string {
+        try {
+            var port = new SerialPort({ path: "COM5", baudRate: 9600 });
+            if (typeof text !== 'string') {
+                throw new Error('Invalid input: expected a string field "text" in the request body.');
+            }
+            const normalized = text.trim();
+            console.log(normalized);
+            const cmd = this.classifier.classify(normalized);
+
+            port.write(cmd + "\n");
+            return cmd;
+        } catch (error) {
+            console.error(error);
+            return 'Error processing command';
+        }
     }
 
     train() {
