@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BayesClassifier } from 'natural';
 import { SerialPort } from 'serialport';
+import { SERIAL_PORT_ENABLE } from 'src/core/constants';
 @Injectable()
 export class CommandService {
   constructor() {
@@ -52,6 +53,9 @@ export class CommandService {
   }
 
   sendCommand(command: string) {
+    if (!SERIAL_PORT_ENABLE) {
+      return;
+    }
     try {
       var port = new SerialPort({
         path: '/dev/cu.usbserial-3130',

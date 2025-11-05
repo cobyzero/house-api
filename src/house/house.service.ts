@@ -9,6 +9,7 @@ import { Device } from 'src/entities/device.entity';
 import { SerialPort } from 'serialport';
 import { CommandService } from 'src/command/command.service';
 import Commands from 'src/core/commands/commands';
+import { SERIAL_PORT_ENABLE } from 'src/core/constants';
 
 @Injectable()
 export class HouseService {
@@ -22,11 +23,13 @@ export class HouseService {
     private commandService: CommandService,
   ) {
     try {
-      this.serialPort = new SerialPort({
-        path: '/dev/cu.usbserial-3130',
-        baudRate: 9600,
-      });
-      this.serialPortEnable = true;
+      if (SERIAL_PORT_ENABLE) {
+        this.serialPort = new SerialPort({
+          path: '/dev/cu.usbserial-3130',
+          baudRate: 9600,
+        });
+        this.serialPortEnable = true;
+      }
       console.log('Serial port enabled');
     } catch (error) {
       console.log('Serial port disabled');
