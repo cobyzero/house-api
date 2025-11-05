@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BayesClassifier } from 'natural';
+import { SerialPort } from 'serialport';
 import { SERIAL_PORT_ENABLE } from 'src/core/constants';
 @Injectable()
 export class CommandService {
@@ -56,6 +57,11 @@ export class CommandService {
       return;
     }
     try {
+      var port = new SerialPort({
+        path: '/dev/cu.usbserial-3130',
+        baudRate: 9600,
+      });
+      port.write(command + '\n');
     } catch (error) {
       console.error(error);
     }

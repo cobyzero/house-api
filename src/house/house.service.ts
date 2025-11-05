@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { Room } from 'src/entities/room.entity';
 import { Device } from 'src/entities/device.entity';
+import { SerialPort } from 'serialport';
 import { CommandService } from 'src/command/command.service';
 import Commands from 'src/core/commands/commands';
 import { SERIAL_PORT_ENABLE } from 'src/core/constants';
@@ -13,7 +14,7 @@ import { SERIAL_PORT_ENABLE } from 'src/core/constants';
 @Injectable()
 export class HouseService {
   private serialPortEnable: boolean = false;
-
+  private serialPort: SerialPort;
   constructor(
     @InjectRepository(House) private houseRepository: Repository<House>,
     @InjectRepository(User) private userRepository: Repository<User>,
@@ -22,6 +23,13 @@ export class HouseService {
     private commandService: CommandService,
   ) {
     try {
+      if (SERIAL_PORT_ENABLE) {
+        this.serialPort = new SerialPort({
+          path: '/dev/cu.usbserial-3130',
+          baudRate: 9600,
+        });
+        this.serialPortEnable = true;
+      }
       console.log('Serial port enabled');
     } catch (error) {
       console.log('Serial port disabled');
