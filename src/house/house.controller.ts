@@ -57,4 +57,11 @@ export class HouseController {
   ): Promise<ResponseBase> {
     return await this.houseService.ventilationDevice(deviceId, ventilation);
   }
+
+  @Post('findRoomsByHouseId')
+  async findRoomsByHouseId(
+    @Body('houseId') houseId: number,
+  ): Promise<ResponseBase> {
+    return await this.houseService.findRoomsByHouseId(houseId);
+  }
 }

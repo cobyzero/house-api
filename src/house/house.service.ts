@@ -6,15 +6,32 @@ import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { Room } from 'src/entities/room.entity';
 import { Device } from 'src/entities/device.entity';
+import { SerialPort } from 'serialport';
+import { CommandService } from 'src/command/command.service';
+import Commands from 'src/core/commands/commands';
 
 @Injectable()
 export class HouseService {
+  private serialPortEnable: boolean = false;
+  private serialPort: SerialPort;
   constructor(
     @InjectRepository(House) private houseRepository: Repository<House>,
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Room) private roomRepository: Repository<Room>,
     @InjectRepository(Device) private deviceRepository: Repository<Device>,
-  ) {}
+    private commandService: CommandService,
+  ) {
+    try {
+      this.serialPort = new SerialPort({
+        path: '/dev/cu.usbserial-3130',
+        baudRate: 9600,
+      });
+      this.serialPortEnable = true;
+      console.log('Serial port enabled');
+    } catch (error) {
+      console.log('Serial port disabled');
+    }
+  }
 
   async findUserHouse(userId: number): Promise<ResponseBase> {
     const house = await this.houseRepository.findOne({
@@ -127,6 +144,11 @@ export class HouseService {
     }
     device.light = light;
     await this.deviceRepository.save(device);
+
+    if (this.serialPortEnable) {
+      var command = light ? Commands.LIGHT_ON : Commands.LIGHT_OFF;
+      this.commandService.convertToCommand(command + '.' + device.pinId);
+    }
     return ResponseBase.success(device, 'Device light changed');
   }
 
@@ -143,5 +165,18 @@ export class HouseService {
     device.ventilation = ventilation;
     await this.deviceRepository.save(device);
     return ResponseBase.success(device, 'Device ventilation changed');
+  }
+
+  async findRoomsByHouseId(houseId: number): Promise<ResponseBase> {
+    const house = await this.houseRepository.findOne({
+      where: { id: houseId },
+    });
+    if (!house) {
+      return ResponseBase.error('House not found');
+    }
+    const rooms = await this.roomRepository.find({
+      where: { house_id: houseId },
+    });
+    return ResponseBase.success(rooms, 'Rooms found');
   }
 }

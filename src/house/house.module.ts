@@ -6,10 +6,11 @@ import { House } from 'src/entities/house.entity';
 import { Room } from 'src/entities/room.entity';
 import { User } from 'src/entities/user.entity';
 import { Device } from 'src/entities/device.entity';
+import { CommandService } from 'src/command/command.service';
 
 @Module({
   controllers: [HouseController],
-  providers: [HouseService],
+  providers: [HouseService, CommandService],
   imports: [TypeOrmModule.forFeature([House, Room, User, Device])],
 })
 export class HouseModule {}
