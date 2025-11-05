@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { BayesClassifier } from 'natural';
 import { SerialPort } from 'serialport';
-import { SERIAL_PORT_ENABLE } from 'src/core/constants';
+import { SERIAL_PORT_ENABLE, SERIAL_PORT_PATH } from 'src/core/constants';
 @Injectable()
 export class CommandService {
   constructor() {
     this.train();
   }
   classifier = new BayesClassifier();
-
+  serialPort: SerialPort;
   convertToCommand(text: string): string {
     try {
       if (typeof text !== 'string') {
@@ -57,11 +57,13 @@ export class CommandService {
       return;
     }
     try {
-      var port = new SerialPort({
-        path: '/dev/cu.usbserial-3130',
-        baudRate: 9600,
-      });
-      port.write(command + '\n');
+      if (!this.serialPort) {
+        this.serialPort = new SerialPort({
+          path: SERIAL_PORT_PATH,
+          baudRate: 9600,
+        });
+      }
+      this.serialPort.write(command + '\n');
     } catch (error) {
       console.error(error);
     }

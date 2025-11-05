@@ -64,4 +64,9 @@ export class HouseController {
   ): Promise<ResponseBase> {
     return await this.houseService.findRoomsByHouseId(houseId);
   }
+
+  @Post('setupPins')
+  async setupPins(@Body('houseId') houseId: number): Promise<ResponseBase> {
+    return await this.houseService.setupPins(houseId);
+  }
 }

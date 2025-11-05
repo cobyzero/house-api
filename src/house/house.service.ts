@@ -13,28 +13,13 @@ import { SERIAL_PORT_ENABLE } from 'src/core/constants';
 
 @Injectable()
 export class HouseService {
-  private serialPortEnable: boolean = false;
-  private serialPort: SerialPort;
   constructor(
     @InjectRepository(House) private houseRepository: Repository<House>,
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Room) private roomRepository: Repository<Room>,
     @InjectRepository(Device) private deviceRepository: Repository<Device>,
     private commandService: CommandService,
-  ) {
-    try {
-      if (SERIAL_PORT_ENABLE) {
-        this.serialPort = new SerialPort({
-          path: '/dev/cu.usbserial-3130',
-          baudRate: 9600,
-        });
-        this.serialPortEnable = true;
-      }
-      console.log('Serial port enabled');
-    } catch (error) {
-      console.log('Serial port disabled');
-    }
-  }
+  ) {}
 
   async findUserHouse(userId: number): Promise<ResponseBase> {
     const house = await this.houseRepository.findOne({
@@ -148,9 +133,9 @@ export class HouseService {
     device.light = light;
     await this.deviceRepository.save(device);
 
-    if (this.serialPortEnable) {
+    if (SERIAL_PORT_ENABLE) {
       var command = light ? Commands.LIGHT_ON : Commands.LIGHT_OFF;
-      this.commandService.convertToCommand(command + '.' + device.pinId);
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
     }
     return ResponseBase.success(device, 'Device light changed');
   }
@@ -167,6 +152,13 @@ export class HouseService {
     }
     device.ventilation = ventilation;
     await this.deviceRepository.save(device);
+
+    if (SERIAL_PORT_ENABLE) {
+      var command = ventilation
+        ? Commands.VENTILATOR_ON
+        : Commands.VENTILATOR_OFF;
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
+    }
     return ResponseBase.success(device, 'Device ventilation changed');
   }
 
@@ -181,5 +173,26 @@ export class HouseService {
       where: { house_id: houseId },
     });
     return ResponseBase.success(rooms, 'Rooms found');
+  }
+
+  async setupPins(houseId: number): Promise<ResponseBase> {
+    const firstRoom = await this.roomRepository.findOne({
+      where: { house_id: houseId },
+    });
+    if (!firstRoom) {
+      return ResponseBase.error('No tienes habitaciones configuradas');
+    }
+    const devices = await this.deviceRepository.find({
+      where: { room_id: firstRoom.id },
+    });
+    for (const device of devices) {
+      if (SERIAL_PORT_ENABLE) {
+        var command = Commands.SETUP_PINS;
+        this.commandService.sendCommand(
+          command.toString() + '.' + device.pinId,
+        );
+      }
+    }
+    return ResponseBase.success(devices, 'Devices found');
   }
 }
