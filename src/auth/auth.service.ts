@@ -11,7 +11,7 @@ export class AuthService {
   ) {}
 
   async login(username: string, password: string): Promise<ResponseBase> {
-    const user = await this.userRepository.findOneBy({ username });
+    const user = await this.userRepository.findOneBy({ username, password });
     if (!user) {
       return ResponseBase.error('User not found');
     }
