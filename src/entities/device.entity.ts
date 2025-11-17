@@ -24,6 +24,9 @@ export class Device {
   @Column({ nullable: false })
   pinId: number;
 
+  @Column({ default: false })
+  doorOpen: boolean;
+
   @ManyToOne(() => Room, (room) => room.devices)
   room: Room;
 }

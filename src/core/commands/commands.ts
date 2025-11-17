@@ -4,5 +4,7 @@ enum Commands {
   VENTILATOR_ON = 'room.ventilator.on',
   VENTILATOR_OFF = 'room.ventilator.off',
   SETUP_PINS = 'house.setup.pins',
+  OPEN_DOOR = 'room.open.door',
+  CLOSE_DOOR = 'room.close.door',
 }
 export default Commands;

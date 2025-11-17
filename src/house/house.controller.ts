@@ -69,4 +69,9 @@ export class HouseController {
   async setupPins(@Body('houseId') houseId: number): Promise<ResponseBase> {
     return await this.houseService.setupPins(houseId);
   }
+
+  @Post('manageDoor')
+  async manageDoor(@Body('deviceId') deviceId: number): Promise<ResponseBase> {
+    return await this.houseService.manageDoor(deviceId);
+  }
 }

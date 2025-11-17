@@ -195,4 +195,20 @@ export class HouseService {
     }
     return ResponseBase.success(devices, 'Devices found');
   }
+
+  async manageDoor(deviceId: number): Promise<ResponseBase> {
+    const device = await this.deviceRepository.findOne({
+      where: { id: deviceId },
+    });
+    if (!device) {
+      return ResponseBase.error('Device not found');
+    }
+    device.doorOpen = !device.doorOpen;
+    await this.deviceRepository.save(device);
+    if (SERIAL_PORT_ENABLE) {
+      var command = device.doorOpen ? Commands.OPEN_DOOR : Commands.CLOSE_DOOR;
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
+    }
+    return ResponseBase.success(device, 'Device managed');
+  }
 }
