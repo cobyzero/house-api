@@ -21,6 +21,9 @@ export class Device {
   @Column({ default: false })
   ventilation: boolean;
 
+  @Column({ default: false })
+  alarm: boolean;
+
   @Column({ nullable: false })
   pinId: number;
 

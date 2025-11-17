@@ -211,4 +211,20 @@ export class HouseService {
     }
     return ResponseBase.success(device, 'Device managed');
   }
+
+  async manageAlarm(deviceId: number): Promise<ResponseBase> {
+    const device = await this.deviceRepository.findOne({
+      where: { id: deviceId },
+    });
+    if (!device) {
+      return ResponseBase.error('Device not found');
+    }
+    device.alarm = !device.alarm;
+    await this.deviceRepository.save(device);
+    if (SERIAL_PORT_ENABLE) {
+      var command = device.alarm ? Commands.ALARM_ON : Commands.ALARM_OFF;
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
+    }
+    return ResponseBase.success(device, 'Device managed');
+  }
 }

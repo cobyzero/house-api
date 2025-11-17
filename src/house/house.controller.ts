@@ -74,4 +74,9 @@ export class HouseController {
   async manageDoor(@Body('deviceId') deviceId: number): Promise<ResponseBase> {
     return await this.houseService.manageDoor(deviceId);
   }
+
+  @Post('manageAlarm')
+  async manageAlarm(@Body('deviceId') deviceId: number): Promise<ResponseBase> {
+    return await this.houseService.manageAlarm(deviceId);
+  }
 }
