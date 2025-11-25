@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { HouseService } from './house.service';
 import { ResponseBase } from 'src/core/responses/response.base';
 
@@ -78,5 +78,10 @@ export class HouseController {
   @Post('manageAlarm')
   async manageAlarm(@Body('deviceId') deviceId: number): Promise<ResponseBase> {
     return await this.houseService.manageAlarm(deviceId);
+  }
+
+  @Get('hello')
+  async helloHouse(): Promise<ResponseBase> {
+    return ResponseBase.success('Hello House', 'Hello House');
   }
 }
