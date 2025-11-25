@@ -7,6 +7,7 @@ import { HouseModule } from './house/house.module';
 import { House } from './entities/house.entity';
 import { Room } from './entities/room.entity';
 import { Device } from './entities/device.entity';
+import { IaModule } from './ia/ia.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Device } from './entities/device.entity';
       port: 6543,
     }),
     HouseModule,
+    IaModule,
   ],
 })
 export class AppModule {}
