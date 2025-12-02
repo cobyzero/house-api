@@ -4,6 +4,6 @@ import { CommandService } from './command.service';
 
 @Module({
   controllers: [CommandController],
-  providers: [CommandService]
+  providers: [CommandService],
 })
 export class CommandModule {}

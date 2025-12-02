@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResponseBase } from 'src/core/responses/response.base';
 import { House } from 'src/entities/house.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import { Room } from 'src/entities/room.entity';
 import { Device } from 'src/entities/device.entity';
 import { CommandService } from 'src/command/command.service';
 import Commands from 'src/core/commands/commands';
+import { SERIAL_PORT_ENABLE } from 'src/core/constants';
 
 @Injectable()
 export class HouseService {
@@ -130,6 +131,10 @@ export class HouseService {
     }
     device.light = light;
     await this.deviceRepository.save(device);
+    if (SERIAL_PORT_ENABLE) {
+      var command = light ? Commands.LIGHT_ON : Commands.LIGHT_OFF;
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
+    }
     return ResponseBase.success(device, 'Device light changed');
   }
 
@@ -145,7 +150,12 @@ export class HouseService {
     }
     device.ventilation = ventilation;
     await this.deviceRepository.save(device);
-
+    if (SERIAL_PORT_ENABLE) {
+      var command = ventilation
+        ? Commands.VENTILATOR_ON
+        : Commands.VENTILATOR_OFF;
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
+    }
     return ResponseBase.success(device, 'Device ventilation changed');
   }
 
@@ -159,19 +169,41 @@ export class HouseService {
     const rooms = await this.roomRepository.find({
       where: { house_id: houseId },
     });
+    for (const room of rooms) {
+      const devices = await this.deviceRepository.find({
+        where: { room_id: room.id },
+      });
+      room.devices = devices;
+    }
     return ResponseBase.success(rooms, 'Rooms found');
   }
 
   async setupPins(houseId: number): Promise<ResponseBase> {
-    const firstRoom = await this.roomRepository.findOne({
+    // 1. Obtiene todas las rooms del house
+    const rooms = await this.roomRepository.find({
       where: { house_id: houseId },
     });
-    if (!firstRoom) {
+
+    if (!rooms.length) {
       return ResponseBase.error('No tienes habitaciones configuradas');
     }
+
+    // 2. Extrae los IDs de todas las rooms
+    const roomIds = rooms.map((r) => r.id);
+
+    // 3. Obtiene TODOS los devices de TODAS las habitaciones
     const devices = await this.deviceRepository.find({
-      where: { room_id: firstRoom.id },
+      where: { room_id: In(roomIds) },
     });
+
+    // 4. Si hay serial port activado → envía los comandos por cada device
+    if (SERIAL_PORT_ENABLE) {
+      for (const device of devices) {
+        const cmd = `${Commands.SETUP_PINS}.${device.pinId}`;
+        this.commandService.sendCommand(cmd);
+      }
+    }
+
     return ResponseBase.success(devices, 'Devices found');
   }
 
@@ -184,6 +216,10 @@ export class HouseService {
     }
     device.doorOpen = !device.doorOpen;
     await this.deviceRepository.save(device);
+    if (SERIAL_PORT_ENABLE) {
+      var command = device.doorOpen ? Commands.OPEN_DOOR : Commands.CLOSE_DOOR;
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
+    }
     return ResponseBase.success(device, 'Device managed');
   }
 
@@ -196,6 +232,10 @@ export class HouseService {
     }
     device.alarm = !device.alarm;
     await this.deviceRepository.save(device);
+    if (SERIAL_PORT_ENABLE) {
+      var command = device.alarm ? Commands.ALARM_ON : Commands.ALARM_OFF;
+      this.commandService.sendCommand(command.toString() + '.' + device.pinId);
+    }
     return ResponseBase.success(device, 'Device managed');
   }
 }
